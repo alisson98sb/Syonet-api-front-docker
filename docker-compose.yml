@@ -1,0 +1,54 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: estoque-api
+    ports:
+      - "8081:8081"    # antes era 8080:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/estoque
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: estoque-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  db:
+    image: postgres:16
+    container_name: estoque-db
+    environment:
+      - POSTGRES_DB=estoque
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d estoque"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    container_name: estoque-adminer
+    ports:
+      - "8082:8080"  # Adminer agora usa 8082
+
+  
+
+volumes:
+  pgdata:
